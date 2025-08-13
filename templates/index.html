@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IMDb Review Sentiment</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <style>
+        body {
+    background: #1e1e2f; /* deep navy-purple */
+    color: #e0e0f0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    margin-bottom: 1rem;
+    color: #a39cff;
+    font-weight: 600;
+  }
+
+  textarea {
+    width: 100%;
+    max-width: 600px;
+    height: 150px;
+    padding: 15px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    border: 1.5px solid #4c4f73;
+    background: #2a2c44;
+    color: #d0d0ea;
+    resize: none;
+    transition: border-color 0.3s ease;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: #817cff;
+  }
+
+  button {
+    margin-top: 15px;
+    padding: 14px 36px;
+    font-size: 1.15rem;
+    border: none;
+    border-radius: 8px;
+    background: #817cff;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background: #a39cff;
+  }
+
+  #result {
+    margin-top: 25px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    min-height: 2.2rem;
+    text-align: center;
+    padding: 12px 24px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 600px;
+    user-select: none;
+    border: 1.5px solid transparent;
+  }
+
+  #result.positive {
+    background-color: #5a7dff22; /* subtle transparent blue */
+    color: #5a7dff;
+    border-color: #5a7dff;
+  }
+
+  #result.negative {
+    background-color: #d15a5a22; /* subtle transparent red */
+    color: #d15a5a;
+    border-color: #d15a5a;
+  }
+    </style>
+</head>
+
+<body>
+    <h1>IMDb Review Sentiment Analyzer</h1>
+    <textarea id="reviewInput" placeholder="Type your movie review here..."></textarea>
+    <button id="submitBtn">Analyze Sentiment</button>
+    <div id="result"></div>
+
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const reviewInput = document.getElementById('reviewInput');
+        const resultDiv = document.getElementById('result');
+
+        submitBtn.addEventListener('click', async () => {
+            const reviewText = reviewInput.value.trim();
+            if (!reviewText) {
+                resultDiv.textContent = 'Please enter a review.';
+                resultDiv.className = '';
+                return;
+            }
+
+            resultDiv.textContent = 'Analyzing...';
+            resultDiv.className = '';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ review: reviewText })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not OK');
+                }
+
+                const data = await response.json();
+
+                if (data.sentiment === 'positive') {
+                    resultDiv.textContent = '😊 Positive Review!';
+                    resultDiv.className = 'positive';
+                } else if (data.sentiment === 'negative') {
+                    resultDiv.textContent = '😞 Negative Review!';
+                    resultDiv.className = 'negative';
+                } else {
+                    resultDiv.textContent = 'Could not determine sentiment.';
+                    resultDiv.className = '';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error connecting to the server.';
+                resultDiv.className = '';
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+
+</html>
